@@ -1,0 +1,138 @@
+// ==============================
+// REVERSEMARKET — Mock Data
+// ==============================
+
+export const CATEGORIES = [
+  'Photography', 'Web Development', 'Graphic Design', 'Tutoring',
+  'Catering', 'Home Repairs', 'Video Editing', 'Writing & Content',
+  'Music & Audio', 'Event Planning',
+];
+
+export const MARKET_BANDS = {
+  Photography: { low: 12000, mid: 18000, high: 25000 },
+  'Web Development': { low: 25000, mid: 50000, high: 120000 },
+  'Graphic Design': { low: 5000, mid: 12000, high: 30000 },
+  Tutoring: { low: 800, mid: 1500, high: 3000 },
+  Catering: { low: 20000, mid: 40000, high: 80000 },
+  'Home Repairs': { low: 2000, mid: 6000, high: 15000 },
+  'Video Editing': { low: 5000, mid: 12000, high: 25000 },
+  'Writing & Content': { low: 3000, mid: 8000, high: 20000 },
+  'Music & Audio': { low: 8000, mid: 20000, high: 45000 },
+  'Event Planning': { low: 15000, mid: 35000, high: 70000 },
+};
+
+export const SAMPLE_REQUIREMENT = {
+  id: 'req_101',
+  buyerId: 'usr_buyer_01',
+  title: 'Event Photographer · 8 hrs · Tirunelveli',
+  description: 'Need an experienced event photographer for 8 hours on 20 November for a corporate conference in Tirunelveli. Must deliver 100+ colour-graded photos within 5 days. Budget is ₹15,000–₹20,000.',
+  category: 'Photography',
+  budgetMin: 15000,
+  budgetMax: 20000,
+  deliveryDays: 5,
+  eventDate: '2026-11-20',
+  location: { isRemote: false, city: 'Tirunelveli' },
+  weights: { R: 35, B: 25, D: 20, Q: 10, L: 10 },
+  status: 'open',
+  createdAt: '2026-10-06T07:29:00Z',
+};
+
+export const PROVIDERS = [
+  {
+    id: 'prov_01',
+    name: 'Lens & Light Studio',
+    avatar: '📷',
+    avatarColor: '#6c63ff',
+    city: 'Tirunelveli',
+    rating: 4.8,
+    completionRate: 0.96,
+    responseRate: 0.95,
+    badges: ['Verified', 'Fast responder', 'Top Rated'],
+    relevanceScore: 33,
+  },
+  {
+    id: 'prov_02',
+    name: 'PixelPerfect Pro',
+    avatar: '🎞',
+    avatarColor: '#00d4aa',
+    city: 'Tirunelveli',
+    rating: 4.5,
+    completionRate: 0.88,
+    responseRate: 0.80,
+    badges: ['Verified'],
+    relevanceScore: 28,
+  },
+  {
+    id: 'prov_03',
+    name: 'ShutterCraft Media',
+    avatar: '✨',
+    avatarColor: '#f5a623',
+    city: 'Chennai',
+    rating: 4.9,
+    completionRate: 0.99,
+    responseRate: 0.97,
+    badges: ['Verified', 'Top Rated'],
+    relevanceScore: 30,
+  },
+  {
+    id: 'prov_04',
+    name: 'Vivid Frames',
+    avatar: '🖼',
+    avatarColor: '#ff6b6b',
+    city: 'Madurai',
+    rating: 3.9,
+    completionRate: 0.72,
+    responseRate: 0.65,
+    badges: [],
+    relevanceScore: 20,
+  },
+];
+
+export const INITIAL_OFFERS = [
+  {
+    id: 'off_501',
+    requirementId: 'req_101',
+    providerId: 'prov_01',
+    price: 18000,
+    deliveryDays: 3,
+    message: 'Full 8-hour event coverage + 120 colour-graded RAW photos. Expert in corporate events. Based right in Tirunelveli — no travel surcharge.',
+    portfolioUrl: 'https://example.com/lenslight',
+    status: 'submitted',
+  },
+  {
+    id: 'off_502',
+    requirementId: 'req_101',
+    providerId: 'prov_02',
+    price: 19500,
+    deliveryDays: 5,
+    message: '8-hour coverage, 100 edited photos, online gallery delivery. Experienced in corporate and product shoots.',
+    portfolioUrl: 'https://example.com/pixelperfect',
+    status: 'submitted',
+  },
+  {
+    id: 'off_503',
+    requirementId: 'req_101',
+    providerId: 'prov_03',
+    price: 16500,
+    deliveryDays: 7,
+    message: 'Award-winning studio. 150 high-res images + short 60-sec teaser reel included. Based in Chennai but travel included.',
+    portfolioUrl: 'https://example.com/shuttercraft',
+    status: 'submitted',
+  },
+  {
+    id: 'off_504',
+    requirementId: 'req_101',
+    providerId: 'prov_04',
+    price: 14000,
+    deliveryDays: 10,
+    message: 'Budget-friendly option. 80 edited photos. Starting out but enthusiastic!',
+    portfolioUrl: 'https://example.com/vividframes',
+    status: 'submitted',
+  },
+];
+
+export const SAMPLE_CHAT_MESSAGES = [
+  { id: 1, sender: 'buyer', text: 'Hi! Can you confirm if the package includes a drone shot?', time: '10:02 AM' },
+  { id: 2, sender: 'provider', text: 'Yes! We have a DJI Mini 4 Pro — we can do 15 minutes of aerial coverage at no extra charge. Would you like a sample reel?', time: '10:05 AM' },
+  { id: 3, sender: 'buyer', text: 'That would be great, please share it!', time: '10:06 AM' },
+];
