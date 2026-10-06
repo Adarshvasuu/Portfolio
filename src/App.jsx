@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SAMPLE_REQUIREMENT, INITIAL_OFFERS, PROVIDERS } from './data/mockData.js';
+import { INITIAL_OFFERS, PROVIDERS } from './data/mockData.js';
 import { scoreOffer } from './utils/scoring.js';
 import Landing from './pages/Landing.jsx';
 import BuyerFlow from './pages/BuyerFlow.jsx';
@@ -19,48 +19,105 @@ export default function App() {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [toast, setToast] = useState(null);
 
+  // Clear old v1 storage key
   useEffect(() => {
+    localStorage.removeItem('reversemarket_state');
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
-      if (s?.requirement) { setRequirement(s.requirement); setOffers(s.offers||[]); setStatuses(s.statuses||{}); if (s.weights) setWeights(s.weights); }
-    } catch {}
+      if (s && s.requirement) {
+        setRequirement(s.requirement);
+        setOffers(s.offers || []);
+        setStatuses(s.statuses || {});
+        if (s.weights) setWeights(s.weights);
+      }
+    } catch (e) {
+      console.warn('Failed to load state:', e);
+    }
   }, []);
 
   useEffect(() => {
     localStorage.setItem(KEY, JSON.stringify({ requirement, offers, statuses, weights }));
   }, [requirement, offers, statuses, weights]);
 
-  const flash = (msg, icon='✅') => { setToast({msg,icon}); setTimeout(() => setToast(null), 3000); };
+  const flash = (msg, icon = '✅') => {
+    setToast({ msg, icon });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const scored = offers.map(o => {
     const p = PROVIDERS.find(x => x.id === o.providerId);
-    if (!p || !requirement) return { ...o, score:null };
+    if (!p || !requirement) return { ...o, score: null, provider: p };
     return { ...o, score: scoreOffer(o, requirement, weights, p), provider: p, status: statuses[o.id] || o.status };
   });
 
-  const publish = req => { setRequirement(req); setOffers(INITIAL_OFFERS); setStatuses({}); setPage('buyer'); flash('Published! Providers are responding.','🚀'); };
-  const addOffer = o => { setOffers(p => [...p, o]); flash('Offer submitted!','📬'); };
-  const updateStatus = (id, st) => {
-    setStatuses(p => ({...p,[id]:st}));
-    if (st === 'accepted') { setSelectedOffer(scored.find(o => o.id === id)); setPage('selected'); flash('Provider selected!','🎉'); }
+  const publish = (req) => {
+    setRequirement(req);
+    setOffers(INITIAL_OFFERS);
+    setStatuses({});
+    setPage('buyer');
+    flash('Published! Providers are responding.', '🚀');
   };
-  const reset = () => { setRequirement(null); setOffers([]); setStatuses({}); setSelectedOffer(null); setPage('landing'); localStorage.removeItem(KEY); };
+
+  const addOffer = (o) => {
+    setOffers(prev => [...prev, o]);
+    flash('Offer submitted!', '📬');
+  };
+
+  const updateStatus = (id, st) => {
+    setStatuses(prev => ({ ...prev, [id]: st }));
+    if (st === 'accepted') {
+      const offer = scored.find(o => o.id === id);
+      setSelectedOffer(offer);
+      setPage('selected');
+      flash('Provider selected!', '🎉');
+    }
+  };
+
+  const reset = () => {
+    setRequirement(null);
+    setOffers([]);
+    setStatuses({});
+    setSelectedOffer(null);
+    setPage('landing');
+    localStorage.removeItem(KEY);
+  };
+
+  const renderPage = () => {
+    switch (page) {
+      case 'landing':
+        return <Landing onBuyer={() => setPage('post')} onProvider={() => setPage('provider')} />;
+      case 'provider':
+        return (
+          <ProviderFlow
+            requirement={requirement} offers={scored} weights={weights}
+            onAddOffer={addOffer} onGoToBuyer={() => setPage(requirement ? 'buyer' : 'post')}
+            showToast={flash}
+          />
+        );
+      default:
+        return (
+          <BuyerFlow
+            page={page} requirement={requirement} scoredOffers={scored}
+            weights={weights} onWeightsChange={setWeights} onPublish={publish}
+            onUpdateStatus={updateStatus} selectedOffer={selectedOffer}
+            onNewNeed={() => setPage('post')} onReset={reset} showToast={flash}
+          />
+        );
+    }
+  };
 
   return (
     <div className="app">
-      {(page === 'landing') && <Landing onBuyer={() => setPage('post')} onProvider={() => setPage('provider')} />}
-      {(page === 'buyer' || page === 'post' || page === 'selected') && (
-        <BuyerFlow page={page} requirement={requirement} scoredOffers={scored} weights={weights} onWeightsChange={setWeights}
-          onPublish={publish} onUpdateStatus={updateStatus} selectedOffer={selectedOffer}
-          onNewNeed={() => setPage('post')} onReset={reset} showToast={flash} />
-      )}
-      {page === 'provider' && (
-        <ProviderFlow requirement={requirement} offers={scored} weights={weights} onAddOffer={addOffer}
-          onGoToBuyer={() => setPage(requirement ? 'buyer' : 'post')} showToast={flash} />
-      )}
+      {renderPage()}
       <FeaturesPanel />
-      <Navbar page={page} onBuyer={() => setPage(requirement ? 'buyer' : 'post')} onProvider={() => setPage('provider')}
-        onLogo={() => setPage('landing')} onReset={reset} onPost={() => setPage('post')} />
+      <Navbar
+        page={page}
+        onBuyer={() => setPage(requirement ? 'buyer' : 'post')}
+        onProvider={() => setPage('provider')}
+        onLogo={() => setPage('landing')}
+        onReset={reset}
+        onPost={() => setPage('post')}
+      />
       {toast && <Toast msg={toast.msg} icon={toast.icon} />}
     </div>
   );
