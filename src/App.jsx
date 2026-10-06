@@ -6,127 +6,61 @@ import BuyerFlow from './pages/BuyerFlow.jsx';
 import ProviderFlow from './pages/ProviderFlow.jsx';
 import Navbar from './components/Navbar.jsx';
 import Toast from './components/Toast.jsx';
+import FeaturesPanel from './components/FeaturesPanel.jsx';
 
-const STORAGE_KEY = 'reversemarket_state';
-
-function loadState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {}
-  return null;
-}
+const KEY = 'reversemarket_v2';
 
 export default function App() {
-  const [page, setPage] = useState('landing'); // landing | buyer | provider
+  const [page, setPage] = useState('landing');
   const [requirement, setRequirement] = useState(null);
   const [offers, setOffers] = useState([]);
-  const [offerStatuses, setOfferStatuses] = useState({}); // { offerId: 'submitted' | 'shortlisted' | 'rejected' | 'accepted' }
-  const [weights, setWeights] = useState({ R: 35, B: 25, D: 20, Q: 10, L: 10 });
+  const [statuses, setStatuses] = useState({});
+  const [weights, setWeights] = useState({ R:35, B:25, D:20, Q:10, L:10 });
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [toast, setToast] = useState(null);
 
-  // Rehydrate from localStorage
   useEffect(() => {
-    const saved = loadState();
-    if (saved) {
-      if (saved.requirement) setRequirement(saved.requirement);
-      if (saved.offers?.length) setOffers(saved.offers);
-      if (saved.offerStatuses) setOfferStatuses(saved.offerStatuses);
-      if (saved.weights) setWeights(saved.weights);
-    }
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (s?.requirement) { setRequirement(s.requirement); setOffers(s.offers||[]); setStatuses(s.statuses||{}); if (s.weights) setWeights(s.weights); }
+    } catch {}
   }, []);
 
-  // Persist to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ requirement, offers, offerStatuses, weights }));
-  }, [requirement, offers, offerStatuses, weights]);
+    localStorage.setItem(KEY, JSON.stringify({ requirement, offers, statuses, weights }));
+  }, [requirement, offers, statuses, weights]);
 
-  const showToast = (msg, icon = '✅') => {
-    setToast({ msg, icon });
-    setTimeout(() => setToast(null), 3000);
-  };
+  const flash = (msg, icon='✅') => { setToast({msg,icon}); setTimeout(() => setToast(null), 3000); };
 
-  // Compute scored offers
-  const scoredOffers = offers.map(offer => {
-    const provider = PROVIDERS.find(p => p.id === offer.providerId);
-    if (!provider || !requirement) return { ...offer, score: null };
-    const score = scoreOffer(offer, requirement, weights, provider);
-    return { ...offer, score, provider, status: offerStatuses[offer.id] || offer.status };
+  const scored = offers.map(o => {
+    const p = PROVIDERS.find(x => x.id === o.providerId);
+    if (!p || !requirement) return { ...o, score:null };
+    return { ...o, score: scoreOffer(o, requirement, weights, p), provider: p, status: statuses[o.id] || o.status };
   });
 
-  const publishRequirement = (req) => {
-    setRequirement(req);
-    setOffers(INITIAL_OFFERS);
-    setOfferStatuses({});
-    setPage('buyer');
-    showToast('Requirement published! Providers are sending offers.', '🚀');
+  const publish = req => { setRequirement(req); setOffers(INITIAL_OFFERS); setStatuses({}); setPage('buyer'); flash('Published! Providers are responding.','🚀'); };
+  const addOffer = o => { setOffers(p => [...p, o]); flash('Offer submitted!','📬'); };
+  const updateStatus = (id, st) => {
+    setStatuses(p => ({...p,[id]:st}));
+    if (st === 'accepted') { setSelectedOffer(scored.find(o => o.id === id)); setPage('selected'); flash('Provider selected!','🎉'); }
   };
-
-  const addOffer = (offer) => {
-    setOffers(prev => [...prev, offer]);
-    showToast('Your offer has been submitted!', '📬');
-  };
-
-  const updateOfferStatus = (offerId, status) => {
-    setOfferStatuses(prev => ({ ...prev, [offerId]: status }));
-    if (status === 'accepted') {
-      const offer = scoredOffers.find(o => o.id === offerId);
-      setSelectedOffer(offer);
-      setPage('selected');
-      showToast('Provider selected! They\'ve been notified.', '🎉');
-    }
-  };
-
-  const resetAll = () => {
-    setRequirement(null);
-    setOffers([]);
-    setOfferStatuses({});
-    setSelectedOffer(null);
-    setPage('landing');
-    localStorage.removeItem(STORAGE_KEY);
-  };
+  const reset = () => { setRequirement(null); setOffers([]); setStatuses({}); setSelectedOffer(null); setPage('landing'); localStorage.removeItem(KEY); };
 
   return (
     <div className="app">
-      <Navbar
-        page={page}
-        onBuyer={() => setPage(requirement ? 'buyer' : 'post')}
-        onProvider={() => setPage('provider')}
-        onLogo={() => setPage('landing')}
-        onReset={resetAll}
-      />
-      {page === 'landing' && (
-        <Landing
-          onBuyer={() => setPage('post')}
-          onProvider={() => setPage('provider')}
-        />
-      )}
+      {(page === 'landing') && <Landing onBuyer={() => setPage('post')} onProvider={() => setPage('provider')} />}
       {(page === 'buyer' || page === 'post' || page === 'selected') && (
-        <BuyerFlow
-          page={page}
-          requirement={requirement}
-          scoredOffers={scoredOffers}
-          weights={weights}
-          onWeightsChange={setWeights}
-          onPublish={publishRequirement}
-          onUpdateStatus={updateOfferStatus}
-          selectedOffer={selectedOffer}
-          onNewNeed={() => setPage('post')}
-          onReset={resetAll}
-          showToast={showToast}
-        />
+        <BuyerFlow page={page} requirement={requirement} scoredOffers={scored} weights={weights} onWeightsChange={setWeights}
+          onPublish={publish} onUpdateStatus={updateStatus} selectedOffer={selectedOffer}
+          onNewNeed={() => setPage('post')} onReset={reset} showToast={flash} />
       )}
       {page === 'provider' && (
-        <ProviderFlow
-          requirement={requirement}
-          offers={scoredOffers}
-          weights={weights}
-          onAddOffer={addOffer}
-          onGoToBuyer={() => setPage(requirement ? 'buyer' : 'post')}
-          showToast={showToast}
-        />
+        <ProviderFlow requirement={requirement} offers={scored} weights={weights} onAddOffer={addOffer}
+          onGoToBuyer={() => setPage(requirement ? 'buyer' : 'post')} showToast={flash} />
       )}
+      <FeaturesPanel />
+      <Navbar page={page} onBuyer={() => setPage(requirement ? 'buyer' : 'post')} onProvider={() => setPage('provider')}
+        onLogo={() => setPage('landing')} onReset={reset} onPost={() => setPage('post')} />
       {toast && <Toast msg={toast.msg} icon={toast.icon} />}
     </div>
   );

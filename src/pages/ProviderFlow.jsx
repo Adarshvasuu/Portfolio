@@ -2,182 +2,111 @@ import { useState } from 'react';
 import { SAMPLE_REQUIREMENT, PROVIDERS } from '../data/mockData.js';
 import { scoreOffer } from '../utils/scoring.js';
 
-const DEMO_PROVIDER = PROVIDERS[0];
+const DEMO = PROVIDERS[0];
 
-function LiveScorePreview({ price, days, requirement, weights }) {
+function LivePreview({ price, days, requirement, weights }) {
   if (!requirement) return null;
-  const mockOffer = { price: parseInt(price) || 0, deliveryDays: parseInt(days) || 5 };
-  const score = scoreOffer(mockOffer, requirement, weights, DEMO_PROVIDER);
-  const color = score.total >= 75 ? '#00d4aa' : score.total >= 50 ? '#f5a623' : '#ff6b6b';
-
+  const s = scoreOffer({ price:parseInt(price)||0, deliveryDays:parseInt(days)||5 }, requirement, weights, DEMO);
+  const c = s.total >= 75 ? '#3DAA6E' : s.total >= 50 ? '#D4AF37' : '#C41E3A';
   return (
-    <div className="live-score-preview">
+    <div className="live-preview">
       <div>
-        <div className="live-score-label">Your estimated match score</div>
-        <div className="live-score-num" style={{ background: `linear-gradient(135deg, ${color}, #6c63ff)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-          {score.total}
-        </div>
+        <div className="live-info-label">Estimated Score</div>
+        <div className="live-num gradient-text">{s.total}</div>
       </div>
-      <div className="live-score-info">
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-          {Object.entries(score.breakdown).map(([k, v]) => (
-            <span key={k} style={{ fontSize: '0.75rem', color: 'var(--clr-text-muted)' }}>
-              {k}: <strong style={{ color: 'var(--clr-text)' }}>{v}</strong>
-            </span>
-          ))}
-        </div>
-        <div className="live-score-sub">{score.explanation}</div>
+      <div style={{flex:1}}>
+        <div className="live-breakdown">{Object.entries(s.breakdown).map(([k,v]) => <span key={k}>{k}: <strong>{v}</strong></span>)}</div>
+        <div className="live-tip">{s.explanation}</div>
       </div>
     </div>
   );
 }
 
-function OfferBuilder({ requirement, weights, onSubmit }) {
-  const [form, setForm] = useState({ price: '', days: '', message: '', portfolio: '' });
-  const [submitted, setSubmitted] = useState(false);
+function Builder({ requirement, weights, onSubmit }) {
+  const [fm, setFm] = useState({ price:'', days:'', message:'', portfolio:'' });
+  const [done, setDone] = useState(false);
+  const up = (k,v) => setFm(p => ({...p,[k]:v}));
 
-  const handleSubmit = () => {
-    if (!form.price || !form.days || !form.message) {
-      alert('Please fill in price, delivery days, and your pitch.');
-      return;
-    }
-    onSubmit({
-      id: `off_${Date.now()}`,
-      requirementId: requirement?.id || 'req_101',
-      providerId: DEMO_PROVIDER.id,
-      price: parseInt(form.price),
-      deliveryDays: parseInt(form.days),
-      message: form.message,
-      portfolioUrl: form.portfolio,
-      status: 'submitted',
-    });
-    setSubmitted(true);
+  const submit = () => {
+    if (!fm.price || !fm.days || !fm.message) { alert('Fill price, days, and pitch.'); return; }
+    onSubmit({ id:`off_${Date.now()}`, requirementId:requirement?.id||'req_101', providerId:DEMO.id, price:parseInt(fm.price), deliveryDays:parseInt(fm.days), message:fm.message, status:'submitted' });
+    setDone(true);
   };
 
-  if (submitted) {
-    return (
-      <div style={{ textAlign: 'center', padding: '40px 0' }}>
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>📬</div>
-        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 8 }}>Offer Submitted!</h2>
-        <p style={{ color: 'var(--clr-text-muted)', marginBottom: 24 }}>The buyer can see your offer ranked in their dashboard.</p>
-        <button className="btn btn-ghost" onClick={() => setSubmitted(false)} id="submit-another-btn">Submit Another</button>
-      </div>
-    );
-  }
+  if (done) return (
+    <div className="text-center" style={{padding:'48px 0'}}>
+      <div style={{fontSize:'3rem',marginBottom:16}}>📬</div>
+      <h2 style={{fontFamily:'var(--font-display)',marginBottom:8}}>Offer Submitted!</h2>
+      <p className="text-muted mb-4">The buyer can see your offer ranked in their dashboard.</p>
+      <button className="btn btn-ghost" onClick={() => setDone(false)}>Submit Another</button>
+    </div>
+  );
 
   return (
-    <div className="offer-builder">
-      <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 6, fontSize: '1.2rem' }}>
-        💼 Submit Your Offer
-      </h2>
-      <p style={{ color: 'var(--clr-text-muted)', fontSize: '0.85rem', marginBottom: 20 }}>
-        Submitting as: <strong style={{ color: 'var(--clr-text)' }}>{DEMO_PROVIDER.name}</strong>
-        {' · '}Adjust your price and days to improve your live score.
+    <div className="card card-gold-glow">
+      <h2 style={{fontFamily:'var(--font-display)',marginBottom:4,fontSize:'1.2rem'}}>💼 Submit Your Offer</h2>
+      <p style={{color:'var(--text-muted)',fontSize:'0.82rem',marginBottom:20}}>
+        As: <strong style={{color:'var(--text-primary)'}}>{DEMO.name}</strong> · Adjust price & days to see your score change live.
       </p>
-
-      <LiveScorePreview price={form.price} days={form.days} requirement={requirement} weights={weights} />
-
+      <LivePreview price={fm.price} days={fm.days} requirement={requirement} weights={weights} />
       <div className="form-grid mb-4">
         <div className="form-group">
-          <label className="form-label" htmlFor="offer-price">Your Price (₹)</label>
-          <input className="form-input" id="offer-price" type="number" placeholder="18000" value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} />
-          {requirement && form.price && (
-            <span style={{ fontSize: '0.75rem', color: parseInt(form.price) <= requirement.budgetMax ? 'var(--clr-accent)' : 'var(--clr-accent2)', marginTop: 4 }}>
-              {parseInt(form.price) <= requirement.budgetMax ? '✓ Within budget' : `⚠ ₹${(parseInt(form.price) - requirement.budgetMax).toLocaleString('en-IN')} over budget`}
-            </span>
-          )}
+          <label className="form-label">Price (₹)</label>
+          <input className="form-input" type="number" placeholder="18000" value={fm.price} onChange={e => up('price',e.target.value)} id="o-price" />
+          {requirement && fm.price && <span className={`form-hint ${parseInt(fm.price)<=requirement.budgetMax?'good':'bad'}`}>{parseInt(fm.price)<=requirement.budgetMax?'✓ Within budget':`⚠ ₹${(parseInt(fm.price)-requirement.budgetMax).toLocaleString('en-IN')} over`}</span>}
         </div>
         <div className="form-group">
-          <label className="form-label" htmlFor="offer-days">Delivery Days</label>
-          <input className="form-input" id="offer-days" type="number" placeholder="3" value={form.days} onChange={e => setForm(p => ({ ...p, days: e.target.value }))} />
-          {requirement && form.days && (
-            <span style={{ fontSize: '0.75rem', color: parseInt(form.days) <= requirement.deliveryDays ? 'var(--clr-accent)' : 'var(--clr-accent2)', marginTop: 4 }}>
-              {parseInt(form.days) <= requirement.deliveryDays ? '✓ On time or early' : `⚠ ${parseInt(form.days) - requirement.deliveryDays} days late`}
-            </span>
-          )}
+          <label className="form-label">Delivery Days</label>
+          <input className="form-input" type="number" placeholder="3" value={fm.days} onChange={e => up('days',e.target.value)} id="o-days" />
+          {requirement && fm.days && <span className={`form-hint ${parseInt(fm.days)<=requirement.deliveryDays?'good':'bad'}`}>{parseInt(fm.days)<=requirement.deliveryDays?'✓ On time or early':`⚠ ${parseInt(fm.days)-requirement.deliveryDays}d late`}</span>}
         </div>
       </div>
-
-      <div className="form-group mb-4">
-        <label className="form-label" htmlFor="offer-pitch">Your Pitch</label>
-        <textarea className="form-textarea" id="offer-pitch" placeholder="Describe what you'll deliver, your experience, and why you're the right choice…" value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} />
-      </div>
-
-      <div className="form-group mb-4">
-        <label className="form-label" htmlFor="offer-portfolio">Portfolio URL (optional)</label>
-        <input className="form-input" id="offer-portfolio" placeholder="https://yourportfolio.com" value={form.portfolio} onChange={e => setForm(p => ({ ...p, portfolio: e.target.value }))} />
-      </div>
-
-      <button
-        className="btn btn-primary"
-        onClick={handleSubmit}
-        id="submit-offer-btn"
-        style={{ padding: '13px 36px', fontSize: '1rem' }}
-      >
-        📤 Submit Offer
-      </button>
+      <div className="form-group mb-4"><label className="form-label">Your Pitch</label><textarea className="form-textarea" placeholder="Describe what you'll deliver…" value={fm.message} onChange={e => up('message',e.target.value)} id="o-pitch" /></div>
+      <button className="btn btn-crimson" onClick={submit} id="submit-offer" style={{padding:'14px 40px',fontSize:'1rem'}}>📤 Submit Offer</button>
     </div>
   );
 }
 
 export default function ProviderFlow({ requirement, offers, weights, onAddOffer, onGoToBuyer, showToast }) {
-  const [activeTab, setActiveTab] = useState('feed');
-  const displayReq = requirement || SAMPLE_REQUIREMENT;
-
-  const handleSubmit = (offer) => {
-    onAddOffer(offer);
-    showToast('Offer submitted! Switch to buyer view to see it ranked.', '📬');
-  };
+  const [tab, setTab] = useState('feed');
+  const req = requirement || SAMPLE_REQUIREMENT;
 
   return (
     <div className="main-content">
       <div className="section-header">
+        <div className="section-eyebrow"><span>Provider</span></div>
         <h1 className="section-title">Provider Dashboard</h1>
         <p className="section-sub">Find relevant needs and send targeted offers. Compete on fit, not spam.</p>
       </div>
-
       <div className="tabs">
-        <button className={`tab ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => setActiveTab('feed')} id="tab-feed">
-          📋 Requirement Feed
-        </button>
-        <button className={`tab ${activeTab === 'offer' ? 'active' : ''}`} onClick={() => setActiveTab('offer')} id="tab-offer">
-          💼 Submit Offer
-        </button>
+        <button className={`tab ${tab==='feed'?'active':''}`} onClick={() => setTab('feed')} id="tab-feed">📋 Requirement Feed</button>
+        <button className={`tab ${tab==='offer'?'active':''}`} onClick={() => setTab('offer')} id="tab-offer">💼 Submit Offer</button>
       </div>
-
-      {activeTab === 'feed' && (
-        <div className="feed-grid">
+      {tab==='feed' && (
+        <div style={{display:'grid',gap:14}}>
           <div className="req-card">
-            <div className="req-cat">📷 {displayReq.category}</div>
-            <div className="req-title">{displayReq.title}</div>
-            <div className="req-desc">{displayReq.description}</div>
+            <div className="req-cat">📷 {req.category}</div>
+            <div className="req-title">{req.title}</div>
+            <div className="req-desc">{req.description}</div>
             <div className="req-meta">
-              <div className="req-meta-item">💰 <strong>₹{displayReq.budgetMin?.toLocaleString('en-IN')} – ₹{displayReq.budgetMax?.toLocaleString('en-IN')}</strong></div>
-              <div className="req-meta-item">⏱ Within <strong>{displayReq.deliveryDays} days</strong></div>
-              <div className="req-meta-item">📍 <strong>{displayReq.location?.city || 'Remote'}</strong></div>
-              <div className="req-meta-item">📅 <strong>{displayReq.eventDate || 'Flexible'}</strong></div>
+              <div className="req-meta-item">💰 <strong>₹{req.budgetMin?.toLocaleString('en-IN')} – ₹{req.budgetMax?.toLocaleString('en-IN')}</strong></div>
+              <div className="req-meta-item">⏱ <strong>{req.deliveryDays} days</strong></div>
+              <div className="req-meta-item">📍 <strong>{req.location?.city||'Remote'}</strong></div>
+              <div className="req-meta-item">📅 <strong>{req.eventDate||'Flexible'}</strong></div>
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-primary btn-sm" onClick={() => setActiveTab('offer')} id="apply-btn">
-                Apply Now →
-              </button>
-              <button className="btn btn-ghost btn-sm" onClick={onGoToBuyer} id="view-buyer-btn">
-                👁 View as Buyer
-              </button>
+            <div style={{display:'flex',gap:10}}>
+              <button className="btn btn-crimson btn-sm" onClick={() => setTab('offer')} id="apply-btn">Apply Now →</button>
+              <button className="btn btn-ghost btn-sm" onClick={onGoToBuyer} id="view-buyer">👁 View as Buyer</button>
             </div>
           </div>
-
-          <div className="card" style={{ borderStyle: 'dashed', opacity: 0.5, textAlign: 'center', padding: '32px' }}>
-            <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>🔍</div>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>More needs matching your profile</div>
-            <div style={{ fontSize: '0.82rem', color: 'var(--clr-text-muted)' }}>Set up your provider profile to see more matched requirements</div>
+          <div className="card" style={{borderStyle:'dashed',opacity:0.45,textAlign:'center',padding:32}}>
+            <div style={{fontSize:'1.5rem',marginBottom:8}}>🔍</div>
+            <div style={{fontWeight:700,marginBottom:4}}>More matching needs coming soon</div>
+            <div className="text-sm text-muted">Set up your provider profile to see more matches</div>
           </div>
         </div>
       )}
-
-      {activeTab === 'offer' && (
-        <OfferBuilder requirement={displayReq} weights={weights} onSubmit={handleSubmit} />
-      )}
+      {tab==='offer' && <Builder requirement={req} weights={weights} onSubmit={o => { onAddOffer(o); showToast('Offer submitted! Switch to buyer view to see it.','📬'); }} />}
     </div>
   );
 }
