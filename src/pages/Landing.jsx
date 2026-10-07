@@ -1,61 +1,108 @@
+import { useState } from 'react';
 import { NOVELTY_FEATURES } from '../data/mockData.js';
+import SpectralRibbon from '../components/SpectralRibbon.jsx';
 
 export default function Landing({ onBuyer, onProvider }) {
+  const [ribbonSpeed, setRibbonSpeed] = useState(0.85);
+
   return (
     <div style={{ flex: 1, position: 'relative' }}>
-      {/* ── HERO ── */}
-      <section style={{
-        padding: '80px 24px 56px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'visible',
-      }}>
-        {/* Orbs */}
-        <div style={{
-          position: 'absolute', width: 500, height: 500,
-          background: 'radial-gradient(circle, rgba(196,30,58,0.2), transparent 70%)',
-          borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none',
-          top: -200, left: '50%', transform: 'translateX(-50%)', zIndex: 0,
-        }} />
-        <div style={{
-          position: 'absolute', width: 300, height: 300,
-          background: 'radial-gradient(circle, rgba(212,175,55,0.1), transparent 70%)',
-          borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none',
-          top: 0, right: '10%', zIndex: 0,
-        }} />
+      {/* ── HERO WITH SPECTRAL RIBBON ── */}
+      <SpectralRibbon
+        speed={ribbonSpeed}
+        intensity={1.2}
+        thickness={1.15}
+        grain={0.35}
+        style={{
+          borderBottom: '1px solid rgba(196,30,58,0.2)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+        }}
+      >
+        <section style={{
+          padding: '84px 24px 60px',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'visible',
+        }}>
+          {/* Orbs */}
+          <div style={{
+            position: 'absolute', width: 500, height: 500,
+            background: 'radial-gradient(circle, rgba(196,30,58,0.2), transparent 70%)',
+            borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none',
+            top: -200, left: '50%', transform: 'translateX(-50%)', zIndex: 0,
+          }} />
+          <div style={{
+            position: 'absolute', width: 300, height: 300,
+            background: 'radial-gradient(circle, rgba(212,175,55,0.1), transparent 70%)',
+            borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none',
+            top: 0, right: '10%', zIndex: 0,
+          }} />
 
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <div className="hero-eyebrow">✦ NEEDS-FIRST MARKETPLACE ✦</div>
-          <h1 className="hero-title">
-            <span className="hero-title-line1">Stop searching.</span>
-            <span className="hero-title-line2">Let them find you.</span>
-            <span className="hero-title-line3">Every score shows its working.</span>
-          </h1>
-          <p className="hero-sub">
-            Post your need once in plain language. AI structures it. Providers compete on fit.
-            A transparent SmartMatch score explains exactly why one offer deserves your money.
-          </p>
-          <div className="hero-actions">
-            <button className="btn btn-crimson" onClick={onBuyer} id="hero-buy" style={{ fontSize: '1rem', padding: '14px 40px' }}>
-              🛒 Post a Need
-            </button>
-            <button className="btn btn-gold" onClick={onProvider} id="hero-sell" style={{ fontSize: '1rem', padding: '14px 40px' }}>
-              🏪 I'm a Provider
-            </button>
-          </div>
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 28, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div className="hero-eyebrow" style={{ marginBottom: 0 }}>✦ NEEDS-FIRST MARKETPLACE ✦</div>
+              <button
+                onClick={() => setRibbonSpeed(s => (s > 0 ? 0 : 0.85))}
+                title="Toggle Spectral Ribbon Animation"
+                style={{
+                  background: 'rgba(22,9,13,0.7)',
+                  border: '1px solid rgba(212,175,55,0.3)',
+                  borderRadius: '9999px',
+                  padding: '5px 14px',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  backdropFilter: 'blur(8px)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: ribbonSpeed > 0 ? '#3DAA6E' : '#7D6B72',
+                  boxShadow: ribbonSpeed > 0 ? '0 0 8px #3DAA6E' : 'none',
+                }} />
+                🌈 Spectral Ribbon: {ribbonSpeed > 0 ? 'Active' : 'Paused'}
+              </button>
+            </div>
 
-          {/* Stats */}
-          <div className="stats-strip" style={{ marginTop: 56 }}>
-            {[['4.2k+', 'Needs Posted'], ['12k+', 'Offers Sent'], ['94%', 'Match Rate'], ['₹0', 'To Post']].map(([n, l]) => (
-              <div className="stat-cell" key={l}>
-                <span className="stat-num">{n}</span>
-                <span className="stat-lbl">{l}</span>
-              </div>
-            ))}
+            <h1 className="hero-title">
+              <span className="hero-title-line1">Stop searching.</span>
+              <span className="hero-title-line2">Let them find you.</span>
+              <span className="hero-title-line3">Every score shows its working.</span>
+            </h1>
+            <p className="hero-sub">
+              Post your need once in plain language. AI structures it. Providers compete on fit.
+              A transparent SmartMatch score explains exactly why one offer deserves your money.
+            </p>
+            <div className="hero-actions">
+              <button className="btn btn-crimson" onClick={onBuyer} id="hero-buy" style={{ fontSize: '1rem', padding: '14px 40px' }}>
+                🛒 Post a Need
+              </button>
+              <button className="btn btn-gold" onClick={onProvider} id="hero-sell" style={{ fontSize: '1rem', padding: '14px 40px' }}>
+                🏪 I'm a Provider
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="stats-strip" style={{ marginTop: 56 }}>
+              {[['4.2k+', 'Needs Posted'], ['12k+', 'Offers Sent'], ['94%', 'Match Rate'], ['₹0', 'To Post']].map(([n, l]) => (
+                <div className="stat-cell" key={l}>
+                  <span className="stat-num">{n}</span>
+                  <span className="stat-lbl">{l}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </SpectralRibbon>
 
       {/* ── HOW IT WORKS ── */}
       <div className="flow-steps">

@@ -145,6 +145,7 @@ export const NOVELTY_FEATURES = [
   { id: 'N6', icon: '🎚', title: '"What Matters Most?" Sliders', desc: 'Drag price/speed/quality sliders to re-weight and re-rank offers live.', tag: 'Novelty' },
   { id: 'N7', icon: '💎', title: 'Fair Price Meter', desc: 'Shows each quote as Below / Fair / Above the typical market band.', tag: 'Novelty' },
   { id: 'N8', icon: '💡', title: '"Why Not Me?" Feedback', desc: 'Lower-ranked providers get a tip on how to improve their score.', tag: 'Novelty' },
+  { id: 'N9', icon: '🌈', title: 'Spectral Ribbon WebGL Atmosphere', desc: 'Real-time GLSL chromatic light ribbon reactive to viewports and motion preferences.', tag: 'Novelty' },
 ];
 
 export const ALL_FEATURES = [
@@ -163,4 +164,5 @@ export const ALL_FEATURES = [
   { icon: '🏷', name: 'Trust Badges', desc: 'Verified, Fast Responder, Top Rated' },
   { icon: '💾', name: 'Persistent State', desc: 'localStorage — survives page refresh' },
   { icon: '📱', name: 'Responsive Design', desc: 'Looks great on mobile, tablet, and desktop' },
+  { icon: '🌈', name: 'Spectral Ribbon WebGL', desc: 'Fluid animated chromatic shader atmosphere on hero section' },
 ];
