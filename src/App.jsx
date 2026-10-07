@@ -7,6 +7,7 @@ import ProviderFlow from './pages/ProviderFlow.jsx';
 import Navbar from './components/Navbar.jsx';
 import Toast from './components/Toast.jsx';
 import FeaturesPanel from './components/FeaturesPanel.jsx';
+import SpectralRibbon from './components/SpectralRibbon.jsx';
 
 const KEY = 'reversemarket_v2';
 
@@ -19,7 +20,6 @@ export default function App() {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [toast, setToast] = useState(null);
 
-  // Clear old v1 storage key
   useEffect(() => {
     localStorage.removeItem('reversemarket_state');
     try {
@@ -107,8 +107,42 @@ export default function App() {
   };
 
   return (
-    <div className="app">
-      {renderPage()}
+    <div className="app" style={{ position: 'relative', minHeight: '100vh' }}>
+      {/* ── Global Site-Wide Spectral Ribbon Background for All Pages ── */}
+      <div
+        className="spectral-global-bg"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 0,
+          pointerEvents: 'none',
+          overflow: 'hidden',
+        }}
+      >
+        <SpectralRibbon
+          speed={0.65}
+          intensity={0.88}
+          thickness={1.1}
+          grain={0.35}
+          style={{ width: '100%', height: '100%', background: '#060306' }}
+        />
+        {/* Soft atmospheric radial vignette so text is always high-contrast */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(ellipse at 50% 30%, rgba(6,3,6,0.25) 0%, rgba(6,3,6,0.65) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {renderPage()}
+      </div>
       <FeaturesPanel />
       <Navbar
         page={page}
